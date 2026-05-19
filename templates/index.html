@@ -1,0 +1,89 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="header-action">
+    <h2>Etudiants par jour ou période</h2>
+    <div class="header-action">
+    <a href="{{ url_for('export_csv', annee=annee, td=td, tp=tp, date=date_sel, date2=date2_sel, presence=presence) }}" class="btn-export">
+        Exporter
+    </a>
+</div>
+</div>
+
+<div class="filters-container">
+    <form id="filterForm" method="GET" action="/">
+        <div class="filter-item">
+            <label>Du :</label>
+            <input type="date" name="date" value="{{ date_sel }}" onchange="this.form.submit()">
+        </div>
+
+        <div class="filter-item">
+            <label>Au :</label>
+            <input type="date" name="date2" value="{{ date2_sel }}" onchange="this.form.submit()">
+        </div>
+
+        <div class="filter-item">
+            <select name="annee" onchange="this.form.submit()">
+                <option value="tous">Toutes les promos</option>
+                <option value="BUT1" {{ 'selected' if annee == 'BUT1' }}>BUT1</option>
+                <option value="BUT2" {{ 'selected' if annee == 'BUT2' }}>BUT2</option>
+                <option value="BUT3" {{ 'selected' if annee == 'BUT3' }}>BUT3</option>
+            </select>
+        </div>
+
+        <div class="filter-item">
+            <select name="td" onchange="this.form.submit()">
+                <option value="tous">Tous les groupes TD</option>
+                <option value="TD1" {{ 'selected' if td == 'TD1' }}>TD1</option>
+                <option value="TD2" {{ 'selected' if td == 'TD2' }}>TD2</option>
+                <option value="TD3" {{ 'selected' if td == 'TD3' }}>TD3</option>
+            </select>
+        </div>
+
+        <div class="filter-item">
+            <select name="tp" onchange="this.form.submit()">
+                <option value="tous">Tous les groupes TP</option>
+                <option value="TPA" {{ 'selected' if tp == 'TPA' }}>TPA</option>
+                <option value="TPB" {{ 'selected' if tp == 'TPB' }}>TPB</option>
+                <option value="TPC" {{ 'selected' if tp == 'TPC' }}>TPC</option>
+                <option value="TPD" {{ 'selected' if tp == 'TPD' }}>TPD</option>
+                <option value="TPE" {{ 'selected' if tp == 'TPE' }}>TPE</option>
+            </select>
+        </div>
+
+        <div class="filter-item">
+            <select name="presence" onchange="this.form.submit()">
+                <option value="tous" {{ 'selected' if presence == 'tous' }}>Absents / Présents</option>
+                <option value="presents" {{ 'selected' if presence == 'presents' }}>Présents</option>
+                <option value="absents" {{ 'selected' if presence == 'absents' }}>Absents</option>
+            </select>
+        </div>
+    </form>
+</div>
+
+<table class="main-table">
+    <thead>
+        <tr>
+            <th>Etudiant</th>
+            <th>Groupe TP</th>
+            <th>Absent / présent</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for e in etudiants %}
+        <tr onclick="window.location='/etudiant/{{ e.id_carte }}?date={{ date_sel }}&date2={{ date2_sel }}';" style="cursor:pointer">
+            <td>{{ e.prenom }} {{ e.nom }}</td>
+            <td>{{ e.groupe_tp }}</td>
+            <td>
+                <div class="presence-timeline">
+                    {% for jour in e.calendrier %}
+                    <div class="day-badge {{ 'bg-green' if jour.present else 'bg-red' }}" title="Jour {{ jour.num }}">
+                        {{ jour.num }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
