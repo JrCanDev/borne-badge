@@ -176,40 +176,51 @@ def export_csv():
 
     cursor.execute(query_etud, params_etud)
     etudiants = cursor.fetchall()
+    
+    # On crée un dictionnaire indexé par id_carte pour filtrer plus tard
+    dict_etudiants = {e['id_carte']: e for e in etudiants}
+    liste_id_cartes = list(dict_etudiants.keys())
+    
+    if not liste_id_cartes:
+        # Si aucun étudiant ne correspond aux filtres de groupe
+        return "Aucun étudiant trouvé", 404
 
-    # Requete pour recuperer les badges valides sur la periode selectionnee
-    query_pres = """
-        SELECT DISTINCT id_carte 
+    # 2. MODIFICATION : On groupe par CARTE et par JOUR
+    query_heures = """
+        SELECT id_carte, 
+               DATE(date_heure) as jour,
+               MIN(TIME(date_heure)) as arrivee, 
+               MAX(TIME(date_heure)) as depart
         FROM Pointage 
         WHERE DATE(date_heure) BETWEEN %s AND %s
+        GROUP BY id_carte, DATE(date_heure)
+        ORDER BY jour DESC, id_carte ASC
     """
-    cursor.execute(query_pres, (date_debut, date_fin))
-    presents_ids = [row['id_carte'] for row in cursor.fetchall()]
+    cursor.execute(query_heures, (date_debut, date_fin))
+    tous_les_pointages = cursor.fetchall()
 
-    # Filtrage de la liste selon le choix du filtre de présence (Tous / Présents / Absents)
-    liste_filtree = []
-    for e in etudiants:
-        # Un etudiant est considere présent s'il a pointé au moins une fois sur la période
-        e['est_present'] = e['id_carte'] in presents_ids
-
-        if presence == 'presents' and e['est_present']:
-            liste_filtree.append(e)
-        elif presence == 'absents' and not e['est_present']:
-            liste_filtree.append(e)
-        elif presence == 'tous':
-            liste_filtree.append(e)
-
-    # Creation et ecriture du fichier CSV en mémoire
+    # 3. Écriture du CSV
     si = io.StringIO()
     cw = csv.writer(si)
+    cw.writerow(['Date', 'Nom', 'Prenom', 'Groupe TP', 'Heure Arrivée', 'Heure Départ'])
+    
+    # Liste pour suivre qui a pointé au moins une fois sur la période
+    cartes_presentes_au_moins_une_fois = set()
 
-    # Ligne d'en-tete du fichier CSV
-    cw.writerow(['Nom', 'Prenom', 'Groupe TP', f'Statut du {date_debut} au {date_fin}'])
-
-    # Ajout des lignes pour chaque étudiant filtre
-    for e in liste_filtree:
-        statut = "Présent" if e['est_present'] else "Absent"
-        cw.writerow([e['nom'], e['prenom'], e['groupe_tp'], statut])
+    for row in tous_les_pointages:
+        id_c = row['id_carte']
+        # On vérifie si le pointage appartient à un étudiant de notre liste filtrée
+        if id_c in dict_etudiants:
+            cartes_presentes_au_moins_une_fois.add(id_c)
+            if presence != 'absents': # Si on veut les présents ou 'tous'
+                e = dict_etudiants[id_c]
+                cw.writerow([row['jour'], e['nom'], e['prenom'], e['groupe_tp'], row['arrivee'], row['depart']])
+                
+    # Si le filtre demande 'tous' ou 'absents', on rajoute les élèves qui n'ont JAMAIS pointé du tout de la période
+    if presence in ['tous', 'absents']:
+        for id_c, e in dict_etudiants.items():
+            if id_c not in cartes_presentes_au_moins_une_fois:
+                cw.writerow([f"Du {date_debut} au {date_fin}", e['nom'], e['prenom'], e['groupe_tp'], "ABSENT (Aucun pointage)", "ABSENT"])
 
     # Preparation de la réponse HTTP pour forcer le telechargement du fichier
     output = make_response(si.getvalue())
