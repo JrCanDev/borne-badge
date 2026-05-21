@@ -3,15 +3,19 @@ import mysql.connector
 from datetime import datetime, timedelta
 import csv
 import io
+import os
+from dotenv import load_dotenv
+
+# Charger les variables d'environnement du fichier .env
+load_dotenv()
 
 app = Flask(__name__)
 
-# Configuration BDD
+# Configuration BDD sécurisee via le fichier .env
 db_config = {
-    "host": "localhost",
-    "user": "user",
-    "password": "XVbjwqKpzAHIMqVTJ1wn",
-    "database": "db_cartes"
+    "user": os.getenv("MARIADB_USERNAME", "user"),
+    "password": os.getenv("MARIADB_PASSWORD", ""),
+    "database": os.getenv("MARIADB_DATABASE", "db_cartes"),
 }
 
 def get_db():
