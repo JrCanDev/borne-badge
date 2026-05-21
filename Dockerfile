@@ -20,4 +20,4 @@ ENV PYTHONUNBUFFERED=1
 ENV NODE_ENV=production
 
 # Lancer l'application
-CMD ["python3", "app.py"]
+CMD ["gunicorn", "-b", "0.0.0.0:3000", "-w", "4", "--access-logfile", "-", "app:app"]
