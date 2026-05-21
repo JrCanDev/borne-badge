@@ -291,6 +291,3 @@ def export_etudiant_csv(id_carte):
     cursor.close()
     conn.close()
     return output
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
