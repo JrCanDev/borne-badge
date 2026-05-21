@@ -2,17 +2,18 @@
 services:
 
   database:
-    image: mariadb
-    container_name: ${NAME}_pg
+    image: mariadb:10.6
+    container_name: "${NAME}_db"
     restart: unless-stopped
     environment:
       MARIADB_DATABASE: "${MARIADB_DATABASE}"
-      MARIADB_USERNAME: "${MARIADB_USERNAME}"
+      MARIADB_USER: "${MARIADB_USERNAME}"
       MARIADB_PASSWORD: "${MARIADB_PASSWORD}"
+      MARIADB_ROOT_PASSWORD: "${MARIADB_PASSWORD}"
     networks:
       - lan
     volumes:
-      - ./mariadb-data:/var/lib/mariadb/data
+      - ./mariadb-data:/var/lib/mysql
 
 
   app:
@@ -33,13 +34,18 @@ services:
 
     restart: always
     environment:
-      # see https://ghost.org/docs/config/#configuration-options
+      # Application DB connection (read from .env)
+      MARIADB_HOST: database
+      MARIADB_PORT: "3306"
+      MARIADB_USERNAME: "${MARIADB_USERNAME}"
+      MARIADB_PASSWORD: "${MARIADB_PASSWORD}"
+      MARIADB_DATABASE: "${MARIADB_DATABASE}"
       container__name: ${NAME}
-      database__client: mysql
-      database__connection__host: ${NAME}_pg
-      database__connection__user: "${MYSQL_USERNAME}"
-      database__connection__password: "${MYSQL_PASSWORD}"
-      database__connection__database: "${MYSQL_DATABASE}"
+      database__client: mariadb
+      database__connection__host: database
+      database__connection__user: "${MARIADB_USERNAME}"
+      database__connection__password: "${MARIADB_PASSWORD}"
+      database__connection__database: "${MARIADB_DATABASE}"
 
 networks:
   web:

@@ -13,9 +13,11 @@ app = Flask(__name__)
 
 # Configuration BDD sécurisee via le fichier .env
 db_config = {
+    "host": os.getenv("MARIADB_HOST", "localhost"),
     "user": os.getenv("MARIADB_USERNAME", "user"),
     "password": os.getenv("MARIADB_PASSWORD", ""),
     "database": os.getenv("MARIADB_DATABASE", "db_cartes"),
+    "port": int(os.getenv("MARIADB_PORT", 3306)),
 }
 
 def get_db():
