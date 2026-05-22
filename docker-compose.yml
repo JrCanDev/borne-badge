@@ -14,6 +14,7 @@ services:
       - lan
     volumes:
       - ./mariadb-data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
 
   app:
