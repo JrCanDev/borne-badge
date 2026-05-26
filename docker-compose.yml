@@ -5,6 +5,8 @@ services:
     image: mariadb:10.6
     container_name: "${NAME}_db"
     restart: unless-stopped
+    ports:
+      - "3306:3306"
     environment:
       MARIADB_DATABASE: "${MARIADB_DATABASE}"
       MARIADB_USER: "${MARIADB_USERNAME}"
@@ -15,14 +17,6 @@ services:
     volumes:
       - ./mariadb-data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.${NAME}-bdd.entryPoints=websecure
-      - "traefik.http.services.${NAME}-bdd.loadbalancer.server.port=3001"
-      - traefik.http.routers.${NAME}-bdd.rule=Host(`${NAME}.jrcan.dev`)
-      - traefik.http.routers.${NAME}-bdd.tls=true
-      - traefik.http.routers.${NAME}-bdd.tls.certresolver=myresolver
-
 
   app:
     container_name: ${NAME}
