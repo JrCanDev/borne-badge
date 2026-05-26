@@ -15,7 +15,7 @@ CREATE OR REPLACE TABLE Capteur (
 
 CREATE OR REPLACE TABLE Pointage (
     id_pointage INT AUTO_INCREMENT,
-    date_heure DATETIME DEFAULT CURRENT_TIMESTAMP,
+    date_heure DATETIME DEFAULT (CONVERT_TZ(CURRENT_TIMESTAMP, 'UTC', 'Europe/Paris')),
     id_carte BIGINT,
     id_capteur SMALLINT,
     PRIMARY KEY(id_pointage),
